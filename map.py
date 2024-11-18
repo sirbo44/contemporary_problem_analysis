@@ -23,14 +23,14 @@ m = folium.Map(control_scale=True,
                 max_bounds=True,
                 max_bounds_viscosity=1.0,
                 location=[37.97945, 23.71625], # TO BE CHANGED TO [lat, lon] BEFORE RELEASE
-                zoom_start=5, 
+                zoom_start=6, 
                 min_lat=min_lat,
                 max_lat=max_lat,
                 min_lon=min_lon,
                 max_lon=max_lon,
                 min_zoom=3)
 
-flights = requests.get('https://opensky-network.org/api/states/all').json()
+# flights = requests.get('https://opensky-network.org/api/states/all').json()
 # print(flights)
 
 f = open('airports.csv', 'r+')
@@ -38,8 +38,10 @@ airports = f.readlines()
 for i in range(len(airports)):
     airports[i] = airports[i].split(':')
     airports[i][15] = airports[i][15].replace('"\n', '')
-    # print(airports[i])
-    folium.Marker(location=[airports[i][14],airports[i][15]], popup=airports[i][1]).add_to(m)
+    
+    if airports[i][14] != 0.000 and airports[i][15] != 0.000 and airports[i][1] != 'N/A':
+        if float(airports[i][14]) >= 32.5889 and float(airports[i][14]) <= 43.1 and float(airports[i][15]) >= 8.7425 and float(airports[i][15]) <= 38.69:
+            folium.Marker(location=[airports[i][14],airports[i][15]], popup=airports[i][1]).add_to(m)
 f.close()
 
 
