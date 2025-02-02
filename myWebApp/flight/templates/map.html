@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-search/3.0.0/leaflet-search.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-search/3.0.0/leaflet-search.min.js"></script>
+
+    <style>
+        /* Full-page map styling */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Map container -->
+    <div id="map" class="folium-map"></div>
+
+    <script>
+        // 1. find lat and long of the current user
+        // response = requests.get('https://api.ip2location.io/?key={}&ip={}'.format(key, ip)).json()
+        // lati = response['latitude']
+        // long = response['longitude']
+
+
+
+
+        const map = L.map('map').setView([0,0], 8); // set lat and long for the map to start [lati, long]
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            minZoom:1,
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+       
+        
+        const markerLayer = L.layerGroup();
+        map.on('moveend', () =>{
+            const bounds = map.getBounds(); // Get the current map bounds
+            let top = bounds.getNorthEast().lat
+            let bottom = bounds.getSouthWest().lat 
+            let left = bounds.getSouthWest().lng
+            let right = bounds.getNorthEast().lng
+
+            
+            
+            fetch('https://opensky-network.org/api/states/all')
+            // fetch("api")
+             .then(response => {return response.json()})
+             .then(data => {
+                for (let flight=0;flight<Object.entries(data['states']).length;flight++) {
+                    if (data['states'][flight][5]!=null && data['states'][flight][6]!=null && data['states'][flight][5]>=left && data['states'][flight][5]<=right && data['states'][flight][6]>=left && data['states'][flight][6]<=right){
+                        let marker = L.marker([data['states'][flight][5],data['states'][flight][6]]).addTo(map)
+                            .bindPopup(data['states'][flight][0]);
+                        marker.feature = { properties: { name: data['states'][flight][0]} };
+                        markerLayer.addLayer(marker);
+                    }
+                }
+            });
+        });
+
+
+        map.addLayer(L.layerGroup());
+        const searchControl = new L.Control.Search({
+            layer: markerLayer,
+            propertyName: 'name', // Search by the 'name' property of markers
+            initial: true,
+            zoom: 14, // Zoom level when a marker is found
+            position: 'topright', // Position of the search bar
+            marker: false // Disable the default search marker
+        });
+        // map.addControl(searchControl);
+        // searchControl.on('search:locationfound', (e) => {
+        //     e.layer.openPopup(); // Open the popup for the found marker
+        // });
+            
+
+        
+    </script>
+</body>
+</html>
